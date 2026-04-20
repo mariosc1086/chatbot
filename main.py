@@ -1,13 +1,17 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from openai import OpenAI
 import json
 import pandas as pd
 
-ruta = "/content/drive/MyDrive/INEI/ipc.xlsx"
+ruta = "ipc.xlsx"
 
 df = pd.read_excel(ruta)
 
 df.head()
+
+import os
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def interpretar_pregunta(pregunta):
 
