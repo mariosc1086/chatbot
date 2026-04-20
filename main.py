@@ -216,6 +216,10 @@ app = FastAPI()
 class Pregunta(BaseModel):
     texto: str
 
+@app.get("/")
+def home():
+    return {"mensaje": "API del Chatbot IPC funcionando"}
+
 # 🔥 memoria simple (por sesión básica)
 memoria = {}
 
