@@ -330,28 +330,34 @@ def chat(p: Pregunta):
 
         tipo = datos_completos.get("tipo")
 
-        # 🔥 unidad correcta
-        if tipo == "INDICE_GENERAL":
+        # 🔥 manejar lista
+        if isinstance(tipo, list):
+            tipo_base = tipo[0]
+        else:
+            tipo_base = tipo
+
+        # 🔥 unidad
+        if tipo_base == "INDICE_GENERAL":
             unidad = "puntos"
         else:
             unidad = "%"
 
         if operacion == "maximo":
-            fila = df_res.loc[df_res["VALOR"].idxmax()]
+            fila = df_res.loc[df_res["VALOR"].astype(float).idxmax()]
             return {
                 "respuesta": f"El valor máximo fue {round(fila['VALOR'],2)} {unidad} en {fila['MES']} {fila['ANIO']}"
             }
 
         elif operacion == "minimo":
-            fila = df_res.loc[df_res["VALOR"].idxmin()]
+            fila = df_res.loc[df_res["VALOR"].astype(float).idxmin()]
             return {
                 "respuesta": f"El valor mínimo fue {round(fila['VALOR'],2)} {unidad} en {fila['MES']} {fila['ANIO']}"
             }
 
         elif operacion == "promedio":
-            valor = df_res["VALOR"].mean()
+            valor = df_res["VALOR"].astype(float).mean()
             return {
-                "respuesta": f"El promedio es {round(valor,2)} {unidad}"
+                "respuesta": f"El promedio fue {round(valor,2)} {unidad}"
             }
 
         # 🔥 si no es agregación → GPT
