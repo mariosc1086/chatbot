@@ -318,6 +318,12 @@ def chat(p: Pregunta):
             if v:
                 memoria[k] = v
 
+        # 🔥 AQUÍ VA 👇 (ANTES DEL FILTRO)
+        # solo elimina mes si el usuario NO lo mencionó
+        if datos_completos.get("operacion") in ["maximo", "minimo", "promedio"] and "mes" not in datos_limpios:
+            datos_completos.pop("mes", None)
+
+        # 🔥 ahora sí consulta
         df_res = consultar_ipc_general(df, datos_completos)
 
         if df_res.empty:
