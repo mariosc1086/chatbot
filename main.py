@@ -222,6 +222,32 @@ Pregunta: {pregunta}
 
     return response.choices[0].message.content
 
+def clasificar_intencion(pregunta):
+
+    prompt = f"""
+Clasifica la intención de la siguiente pregunta.
+
+Opciones:
+- saludo
+- consulta_ipc
+
+Reglas:
+- Saludos, cortesía, conversación → saludo
+- Preguntas sobre IPC, inflación, índices → consulta_ipc
+
+Pregunta: {pregunta}
+
+Responde SOLO una palabra.
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+
+    return response.choices[0].message.content.strip().lower()
+
 app = FastAPI()
 
 app.add_middleware(
@@ -247,7 +273,28 @@ def chat(p: Pregunta):
 
     global memoria
 
+    mensaje = p.texto.lower().strip()
+
+    saludos = ["hola", "buenos dias", "buenas tardes", "buenas noches"]
+    agradecimientos = ["gracias", "ok", "listo"]
+
+    if len(mensaje) < 3:
+        return {"respuesta": "¿Puedes darme más detalles? 😊"}
+
+    if mensaje in saludos:
+        return {"respuesta": "👋 Hola, soy tu asistente de inflación. ¿Qué deseas consultar?"}
+
+    if any(mensaje.startswith(a) for a in agradecimientos):
+        return {"respuesta": "😊 ¡Con gusto! Si necesitas algo más, dime."}
+
     try:
+        intencion = clasificar_intencion(p.texto)
+
+        if intencion == "saludo":
+            return {
+                "respuesta": "👋 Hola, soy tu asistente de inflación. ¿Qué deseas consultar?"
+            }
+
         datos = interpretar_pregunta(p.texto)
 
         datos_limpios = {
@@ -258,9 +305,17 @@ def chat(p: Pregunta):
         datos_completos = memoria.copy()
         datos_completos.update(datos_limpios)
 
-        memoria.update(datos_limpios)
+        # 🔥 memoria segura
+        for k, v in datos_limpios.items():
+            if v:
+                memoria[k] = v
 
         df_res = consultar_ipc_general(df, datos_completos)
+
+        if df_res.empty:
+            return {
+                "respuesta": "No encontré datos 😕. Prueba con: 'IPC Lima enero 2024'."
+            }
 
         respuesta = generar_respuesta_gpt(p.texto, df_res, memoria)
 
