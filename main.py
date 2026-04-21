@@ -78,9 +78,9 @@ REGLAS PARA "mes":
 
 REGLAS PARA "tipo":
 
-- Si preguntan "¿cuánto aumentó?", "variación mensual" → MENSUAL
-- Si dicen "acumulado" → ACUMULADA
-- Si dicen "anual" → ANUAL
+- Si preguntan "¿cuánto aumentó?", "variación mensual", "variacion mensual", "variación", "variacion" → MENSUAL
+- Si dicen "acumulado", "variación acumulada", "variacion acumulada" → ACUMULADA
+- Si dicen "anual", "variación anual", "variacion anual" → ANUAL
 - Si solo piden el índice → INDICE_GENERAL
 
 ---
@@ -187,6 +187,13 @@ Eres un analista económico.
 
 {contexto}
 
+Los datos tienen esta estructura:
+
+- INDICE_GENERAL: nivel del índice (no es porcentaje)
+- MENSUAL: variación mensual en porcentaje
+- ACUMULADA: variación acumulada en porcentaje
+- ANUAL: variación anual en porcentaje
+
 Con base en estos datos:
 {datos}
 
@@ -198,6 +205,9 @@ Responde de forma:
 - sin explicaciones adicionales
 - sin suposiciones
 - sin pedir datos adicionales
+- NO confundas el índice con variación
+- El índice se expresa en puntos
+- La variación se expresa en porcentaje
 
 Si hay múltiples resultados, respóndelos en una sola frase clara.
 
