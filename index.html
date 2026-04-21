@@ -6,85 +6,165 @@
 
 <style>
 body {
-    font-family: Arial;
-    background: #f4f6f8;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #343541;
+    color: white;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    height: 100vh;
 }
 
-.container {
-    width: 500px;
-    margin-top: 40px;
+header {
+    padding: 15px;
+    text-align: center;
+    background: #202123;
+    font-weight: bold;
 }
 
-.chatbox {
-    background: white;
-    height: 400px;
+#chat {
+    flex: 1;
     overflow-y: auto;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
+    padding: 20px;
 }
 
 .mensaje {
-    margin: 10px 0;
+    display: flex;
+    margin-bottom: 15px;
 }
 
 .user {
-    text-align: right;
-    color: blue;
+    justify-content: flex-end;
 }
 
 .bot {
-    text-align: left;
-    color: green;
+    justify-content: flex-start;
 }
 
-.input-area {
-    margin-top: 10px;
+.burbuja {
+    max-width: 70%;
+    padding: 12px;
+    border-radius: 10px;
+    line-height: 1.4;
+}
+
+.user .burbuja {
+    background: #0b93f6;
+}
+
+.bot .burbuja {
+    background: #444654;
+}
+
+#input-area {
     display: flex;
+    padding: 10px;
+    background: #202123;
 }
 
 input {
     flex: 1;
-    padding: 10px;
+    padding: 12px;
+    border-radius: 5px;
+    border: none;
+    outline: none;
 }
 
 button {
-    padding: 10px;
+    margin-left: 10px;
+    padding: 12px;
+    border: none;
+    background: #19c37d;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #16a06a;
+}
+
+/* loader */
+.loader {
+    width: 40px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.loader div {
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite;
+}
+
+.loader div:nth-child(2) {
+    animation-delay: 0.2s;
+}
+.loader div:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<header>🤖 Chatbot IPC Perú</header>
 
-<h2>🤖 Chatbot IPC Perú</h2>
+<div id="chat"></div>
 
-<div id="chat" class="chatbox"></div>
-
-<div class="input-area">
-    <input type="text" id="pregunta" placeholder="Ej: IPC Lima diciembre 2025">
+<div id="input-area">
+    <input id="pregunta" placeholder="Ej: IPC Lima diciembre 2025">
     <button onclick="enviar()">Enviar</button>
 </div>
 
-</div>
-
 <script>
-
-// 🔥 CAMBIA ESTA URL POR LA DE RENDER
-const url = "https://chatbot-avdd.onrender.com/chat";
+const url = "https://chatbot-avdd.onrender.com/chat"; // 🔥 tu API
 
 function agregarMensaje(texto, tipo) {
     const chat = document.getElementById("chat");
-    const div = document.createElement("div");
 
+    const div = document.createElement("div");
     div.classList.add("mensaje", tipo);
-    div.innerText = texto;
+
+    const burbuja = document.createElement("div");
+    burbuja.classList.add("burbuja");
+    burbuja.innerText = texto;
+
+    div.appendChild(burbuja);
+    chat.appendChild(div);
+
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function mostrarLoader() {
+    const chat = document.getElementById("chat");
+
+    const div = document.createElement("div");
+    div.classList.add("mensaje", "bot");
+    div.id = "loader";
+
+    div.innerHTML = `
+        <div class="burbuja">
+            <div class="loader">
+                <div></div><div></div><div></div>
+            </div>
+        </div>
+    `;
 
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
+}
+
+function quitarLoader() {
+    const loader = document.getElementById("loader");
+    if (loader) loader.remove();
 }
 
 async function enviar() {
@@ -93,9 +173,10 @@ async function enviar() {
 
     if (pregunta.trim() === "") return;
 
-    agregarMensaje("👤 " + pregunta, "user");
-
+    agregarMensaje(pregunta, "user");
     document.getElementById("pregunta").value = "";
+
+    mostrarLoader();
 
     try {
         let res = await fetch(url, {
@@ -108,12 +189,21 @@ async function enviar() {
 
         let data = await res.json();
 
-        agregarMensaje("🤖 " + data.respuesta, "bot");
+        quitarLoader();
+        agregarMensaje(data.respuesta, "bot");
 
     } catch (error) {
-        agregarMensaje("⚠️ Error de conexión con el servidor", "bot");
+        quitarLoader();
+        agregarMensaje("⚠️ Error de conexión", "bot");
     }
 }
+
+// enviar con ENTER
+document.getElementById("pregunta").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        enviar();
+    }
+});
 </script>
 
 </body>
