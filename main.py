@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from openai import OpenAI
 import json
 import pandas as pd
+from fastapi.middleware.cors import CORSMiddleware
 
 ruta = "ipc.xlsx"
 
@@ -212,6 +213,14 @@ Pregunta: {pregunta}
     return response.choices[0].message.content
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 🔥 permite acceso desde cualquier web
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Pregunta(BaseModel):
     texto: str
