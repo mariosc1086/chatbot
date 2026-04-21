@@ -48,6 +48,9 @@ Extrae los siguientes campos de la pregunta y responde SOLO en JSON válido.
   Uno de estos valores:
   - puntual
   - comparacion
+  - minimo
+  - maximo
+  - promedio
 
 ---
 
@@ -89,6 +92,11 @@ REGLAS PARA "operacion":
 
 - Si preguntan por un valor específico → puntual
 - Si comparan (ej: "2024 y 2025", "vs", "comparar") → comparacion
+- Si preguntan por el valor maximo o máximo → maximo
+- Si preguntan por el valor minimo o mínimo → minimo
+- "máximo", "maximo", "mayor" → maximo
+- "mínimo", "minimo", "menor" → minimo
+- "promedio", "media" → promedio
 
 ---
 
@@ -314,9 +322,39 @@ def chat(p: Pregunta):
 
         if df_res.empty:
             return {
-                "respuesta": "No encontré datos 😕. Prueba con: 'IPC Lima enero 2024'."
+                "respuesta": "No encontré datos para esa consulta. Intenta con otro mes, año o tipo de IPC."
             }
 
+        # 🔥 NUEVO BLOQUE
+        operacion = datos_completos.get("operacion", "puntual")
+
+        tipo = datos_completos.get("tipo")
+
+        # 🔥 unidad correcta
+        if tipo == "INDICE_GENERAL":
+            unidad = "puntos"
+        else:
+            unidad = "%"
+
+        if operacion == "maximo":
+            fila = df_res.loc[df_res["VALOR"].idxmax()]
+            return {
+                "respuesta": f"El valor máximo fue {round(fila['VALOR'],2)} {unidad} en {fila['MES']} {fila['ANIO']}"
+            }
+
+        elif operacion == "minimo":
+            fila = df_res.loc[df_res["VALOR"].idxmin()]
+            return {
+                "respuesta": f"El valor mínimo fue {round(fila['VALOR'],2)} {unidad} en {fila['MES']} {fila['ANIO']}"
+            }
+
+        elif operacion == "promedio":
+            valor = df_res["VALOR"].mean()
+            return {
+                "respuesta": f"El promedio es {round(valor,2)} {unidad}"
+            }
+
+        # 🔥 si no es agregación → GPT
         respuesta = generar_respuesta_gpt(p.texto, df_res, memoria)
 
         return {"respuesta": respuesta}
