@@ -175,10 +175,65 @@ def consultar_ipc_general(df, datos):
 
     return df_filtrado
 
+# Aplicaciones de operaciones basicas de estadistica
+def calcular_maximo(df):
+    fila = df.loc[df["VALOR"].astype(float).idxmax()]
+    return {
+        "valor": round(fila["VALOR"], 2),
+        "mes": fila["MES"],
+        "anio": fila["ANIO"]
+    }
+
+def calcular_minimo(df):
+    fila = df.loc[df["VALOR"].astype(float).idxmin()]
+    return {
+        "valor": round(fila["VALOR"], 2),
+        "mes": fila["MES"],
+        "anio": fila["ANIO"]
+    }
+
+def calcular_promedio(df):
+    valor = df["VALOR"].astype(float).mean()
+    return {
+        "valor": round(valor, 2)
+    }
+
 def generar_respuesta_gpt(pregunta, df_res, memoria):
 
     if df_res.empty:
         return "No se encontró información para la consulta."
+    
+    operacion = memoria.get("operacion")
+
+    tipo = memoria.get("tipo")
+
+    # 🔥 manejar tipo lista
+    if isinstance(tipo, list):
+        tipo_base = tipo[0]
+    else:
+        tipo_base = tipo
+
+    # 🔥 unidad
+    if tipo_base == "INDICE_GENERAL":
+        unidad = "puntos"
+    else:
+        unidad = "%"
+
+    # 🔥 usar funciones existentes
+    if operacion == "maximo":
+        res = calcular_maximo(df_res)
+        resultado = f"valor={res['valor']}, mes={res['mes']}, anio={res['anio']}, unidad={unidad}"
+
+    elif operacion == "minimo":
+        res = calcular_minimo(df_res)
+        resultado = f"valor={res['valor']}, mes={res['mes']}, anio={res['anio']}, unidad={unidad}"
+
+    elif operacion == "promedio":
+        res = calcular_promedio(df_res)
+        resultado = f"valor={res['valor']}, unidad={unidad}"
+
+    else:
+        resultado = None
 
     datos = df_res.to_dict(orient="records")
 
@@ -202,8 +257,8 @@ Los datos tienen esta estructura:
 - ACUMULADA: variación acumulada en porcentaje
 - ANUAL: variación anual en porcentaje
 
-Con base en estos datos:
-{datos}
+Resultado calculado:
+{resultado if resultado else datos}
 
 Responde de forma:
 - MUY breve
@@ -348,23 +403,16 @@ def chat(p: Pregunta):
         else:
             unidad = "%"
 
+        resultado = None
+
         if operacion == "maximo":
-            fila = df_res.loc[df_res["VALOR"].astype(float).idxmax()]
-            return {
-                "respuesta": f"El valor máximo fue {round(fila['VALOR'],2)} {unidad} en {fila['MES']} {fila['ANIO']}"
-            }
+            resultado = calcular_maximo(df_res)
 
         elif operacion == "minimo":
-            fila = df_res.loc[df_res["VALOR"].astype(float).idxmin()]
-            return {
-                "respuesta": f"El valor mínimo fue {round(fila['VALOR'],2)} {unidad} en {fila['MES']} {fila['ANIO']}"
-            }
+            resultado = calcular_minimo(df_res)
 
         elif operacion == "promedio":
-            valor = df_res["VALOR"].astype(float).mean()
-            return {
-                "respuesta": f"El promedio fue {round(valor,2)} {unidad}"
-            }
+            resultado = calcular_promedio(df_res)
 
         # 🔥 si no es agregación → GPT
         respuesta = generar_respuesta_gpt(p.texto, df_res, memoria)
