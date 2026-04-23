@@ -198,7 +198,7 @@ def calcular_promedio(df):
         "valor": round(valor, 2)
     }
 
-def generar_respuesta_gpt(pregunta, df_res, memoria):
+def generar_respuesta_gpt(pregunta, df_res, memoria, resultado=None):
 
     if df_res.empty:
         return "No se encontró información para la consulta."
@@ -235,7 +235,10 @@ def generar_respuesta_gpt(pregunta, df_res, memoria):
     else:
         resultado = None
 
-    datos = df_res.to_dict(orient="records")
+    if resultado:
+        datos = resultado
+    else:
+        datos = df_res.to_dict(orient="records")
 
     contexto = f"""
 Contexto previo:
@@ -415,7 +418,7 @@ def chat(p: Pregunta):
             resultado = calcular_promedio(df_res)
 
         # 🔥 si no es agregación → GPT
-        respuesta = generar_respuesta_gpt(p.texto, df_res, memoria)
+        respuesta = generar_respuesta_gpt(p.texto, df_res, memoria, resultado)
 
         return {"respuesta": respuesta}
 
