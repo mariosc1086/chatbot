@@ -375,6 +375,12 @@ def chat(p: Pregunta):
         for k, v in datos_limpios.items():
             if v:
                 memoria[k] = v
+        
+        # 🔥 reset inteligente
+        if "indicador" in datos_limpios:
+            if memoria.get("indicador") != datos_limpios["indicador"]:
+                memoria.pop("mes", None)
+                memoria.pop("tipo", None)
 
         # 🔥 AQUÍ VA 👇 (ANTES DEL FILTRO)
         # solo elimina mes si el usuario NO lo mencionó
